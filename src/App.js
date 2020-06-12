@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 function App() {
+  const [state, setstate] = useState(false);
   useEffect(() => {
     insertGapiScript();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -25,8 +26,12 @@ function App() {
 
       window.gapi.load("signin2", () => {
         const params = {
-          onsuccess: () => {
+          onsuccess: (googleUser) => {
+            const name = googleUser.getBasicProfile().getName();
+            const id_token = googleUser.getAuthResponse().id_token;
             console.log("User has finished signing in!");
+            console.log("Token", id_token);
+            setstate(`${name} signed in`);
           },
         };
         window.gapi.signin2.render("loginButton", params);
@@ -40,6 +45,7 @@ function App() {
       .signOut()
       .then(function () {
         console.log("User signed out.");
+        setstate(null);
       })
       .catch(() => {
         console.error("User signed out.");
@@ -49,8 +55,13 @@ function App() {
   return (
     <>
       <h1>Google Login Demo</h1>
-      <a id="loginButton">Sign in with Google</a>
-      <button onClick={signOut}>Sign out</button>
+      {state ? (
+        <button onClick={signOut}>Sign out</button>
+      ) : (
+        <a id="loginButton">Sign in with Google</a>
+      )}
+
+      {state && <p>{state}</p>}
     </>
   );
 }
