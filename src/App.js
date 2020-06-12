@@ -1,60 +1,44 @@
-import React, { useEffect, useRef } from "react";
-import logo from "./logo.svg";
-import "./App.css";
-
-const apiKey = "YOUR_API_KEY";
-const discoveryDocs = [
-  "https://people.googleapis.com/$discovery/rest?version=v1",
-];
-var clientId =
-  "1086442865500-dmepui1f6a652hfjn3pcgukma5lcqkgi.apps.googleusercontent.com";
-
-var scopes = "profile";
+import React, { useEffect, useState } from "react";
 
 function App() {
-  var auth2Instance = useRef(null);
   useEffect(() => {
-    window.gapi.load("auth2", async function () {
-      const googleAuth = await window.gapi.auth2.init({
-        client_id:
-          "260896681708-o8bddcaipuisksuvb5u805vokq0fg2hc.apps.googleusercontent.com",
-      });
-      auth2Instance = window.gapi.auth2.getAuthInstance();
-      auth2Instance.isSignedIn.listen(updateSigninStatus);
-      updateSigninStatus(auth2Instance.isSignedIn.get());
-      console.log("googleAuth", auth2Instance);
-    });
+    insertGapiScript();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onSignIn = (e) => {
-    e.preventDefault();
-    auth2Instance.signIn();
+  const insertGapiScript = () => {
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.onload = () => {
+      initializeGoogleSignIn();
+    };
+    document.body.appendChild(script);
   };
 
-  function updateSigninStatus(isSignedIn) {
-    if (isSignedIn) {
-      console.log("Signed In");
-      makeApiCall();
-    } else {
-      console.log("Not signed in");
-    }
-  }
-
-  function makeApiCall() {
-    window.gapi.client.people.people
-      .get({
-        resourceName: "people/me",
-        "requestMask.includeField": "person.names",
-      })
-      .then(function (resp) {
-        console.log("makeApiCall resp", resp);
+  const initializeGoogleSignIn = () => {
+    window.gapi.load("auth2", () => {
+      window.gapi.auth2.init({
+        client_id:
+          "886474662299-pjvv2e3midhh92e51v7hrlgn49mr5mvp.apps.googleusercontent.com",
       });
-  }
+      console.log("Api inited");
+
+      window.gapi.load("signin2", () => {
+        const params = {
+          onsuccess: () => {
+            console.log("User has finished signing in!");
+          },
+        };
+        window.gapi.signin2.render("loginButton", params);
+      });
+    });
+  };
 
   return (
-    <div className="App">
-      <button onClick={onSignIn}>Sign in</button>
-    </div>
+    <>
+      <h1>Google Login Demo</h1>
+      <a id="loginButton">Sign in with Google</a>
+    </>
   );
 }
 
