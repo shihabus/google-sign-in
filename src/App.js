@@ -8,7 +8,7 @@ function App() {
 
   const insertGapiScript = () => {
     const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
+    script.src = "https://apis.google.com/js/platform.js";
     script.onload = () => {
       initializeGoogleSignIn();
     };
@@ -34,10 +34,23 @@ function App() {
     });
   };
 
+  function signOut() {
+    var auth2 = window.gapi.auth2.getAuthInstance();
+    auth2
+      .signOut()
+      .then(function () {
+        console.log("User signed out.");
+      })
+      .catch(() => {
+        console.error("User signed out.");
+      });
+  }
+
   return (
     <>
       <h1>Google Login Demo</h1>
       <a id="loginButton">Sign in with Google</a>
+      <button onClick={signOut}>Sign out</button>
     </>
   );
 }
