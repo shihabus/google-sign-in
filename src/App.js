@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 
 function App() {
-  const [state, setstate] = useState(false);
+  const [state, setState] = useState(false);
+
   useEffect(() => {
     insertGapiScript();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -9,59 +10,65 @@ function App() {
 
   const insertGapiScript = () => {
     const script = document.createElement("script");
-    script.src = "https://apis.google.com/js/platform.js";
+    script.src = "https://accounts.google.com/gsi/client";
     script.onload = () => {
-      initializeGoogleSignIn();
+      initializeGoogle();
     };
     document.body.appendChild(script);
   };
 
-  const initializeGoogleSignIn = () => {
-    window.gapi.load("auth2", () => {
-      window.gapi.auth2.init({
-        client_id:
-          "886474662299-pjvv2e3midhh92e51v7hrlgn49mr5mvp.apps.googleusercontent.com",
-      });
-      console.log("Api inited");
+  // onGoogleLibraryLoad
+  window.onGoogleLibraryLoad = () => {
+    console.log("onGoogleLibraryLoad");
+  };
 
-      window.gapi.load("signin2", () => {
-        const params = {
-          onsuccess: (googleUser) => {
-            const name = googleUser.getBasicProfile().getName();
-            const id_token = googleUser.getAuthResponse().id_token;
-            console.log("User has finished signing in!");
-            console.log("Token", id_token);
-            setstate(`${name} signed in`);
-          },
-        };
-        window.gapi.signin2.render("loginButton", params);
+  const initializeGoogle = () => {
+    window.onload = function () {
+      window.google.accounts.id.initialize({
+        client_id:
+          "1086442865500-8j926vks62lnh7cmcg6rocqi12p39loe.apps.googleusercontent.com",
+        callback: handleCredentialResponse,
+        native_callback: handleNativeCallBack,
+        // auto_select: true,
       });
+      window.google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          // continue with another identity provider.
+          console.log("continue with another identity provider.");
+        }
+      });
+    };
+  };
+
+  const handleCredentialResponse = (credentialResponse) => {
+    console.log("credentialResponse", credentialResponse);
+    setState(true);
+    // credential:ID token
+    window.google.accounts.id.storeCredential((cred) => {
+      console.log("storeCredential", cred);
     });
   };
 
-  function signOut() {
-    var auth2 = window.gapi.auth2.getAuthInstance();
-    auth2
-      .signOut()
-      .then(function () {
-        console.log("User signed out.");
-        setstate(null);
-      })
-      .catch(() => {
-        console.error("User signed out.");
-      });
-  }
+  const handleNativeCallBack = (nativeCallbackResponse) => {
+    console.log("nativeCallbackResponse", nativeCallbackResponse);
+    // credential:ID token
+  };
+
+  const onSignOut = () => {
+    window.google.accounts.id.disableAutoSelect();
+    console.log("Logged Out");
+    setState(false);
+  };
 
   return (
     <>
-      <h1>Google Login Demo</h1>
-      {state ? (
-        <button onClick={signOut}>Sign out</button>
-      ) : (
-        <a id="loginButton">Sign in with Google</a>
+      <div>Google ONE TAP</div>
+      {state && (
+        <>
+          <div>Logged In</div>
+          <button onClick={() => onSignOut()}>Sign Out</button>
+        </>
       )}
-
-      {state && <p>{state}</p>}
     </>
   );
 }
